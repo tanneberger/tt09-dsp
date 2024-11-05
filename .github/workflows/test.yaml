@@ -23,18 +23,13 @@ jobs:
         shell: bash
         run: pip install -r test/requirements.txt
 
-      - name: Set up JDK 11
+      - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
-          distribution: 'temurin'
-      - name: setup sbt
-        run: |
-          wget http://apt.typesafe.com/repo-deb-build-0002.deb
-          sudo dpkg -i repo-deb-build-0002.deb
-          sudo apt-get update
-          sudo apt-get install sbt
-          sudo apt-get install -y sbt
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
       - name: generate Verilog
         run: sbt run
 
