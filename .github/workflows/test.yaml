@@ -29,7 +29,12 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: setup sbt
-        run: sudo apt-get install -y sbt
+        run: |
+          wget http://apt.typesafe.com/repo-deb-build-0002.deb
+          sudo dpkg -i repo-deb-build-0002.deb
+          sudo apt-get update
+          sudo apt-get install sbt
+          sudo apt-get install -y sbt
       - name: generate Verilog
         run: sbt run
 
