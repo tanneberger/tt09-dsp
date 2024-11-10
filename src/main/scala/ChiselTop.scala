@@ -1,4 +1,76 @@
 import chisel3._
+import chisel3.util.Valid
+import spire.algebra.Ring
+import spire.algebra.Order
+import spire.implicits._
+import spire.math.{ConvertableFrom, ConvertableTo}
+
+class Max[T <: Data: Ring: Order: ConvertableTo, V: ConvertableFrom](inGen:  T, outGen: T, count: Int)  extends Module {
+  val io = IO(new Bundle{
+    val input = Input(Valid(inGen));
+    val max = Output(Valid(outGen));
+  })
+
+  private val last = Reg[T](inGen);
+  private val counter = RegInit(0.U(32.U));
+
+  when((io.input.bits.asUInt > last.asUInt) || (counter > count.U)) {
+    last := io.input
+    counter := 0.U //TODO: potentially there is a softer solution by just bit shifting a bit to left (dividing by 2)
+  }
+
+  counter := counter + 1.U
+  io.max := last
+  io.max.valid := io.input.valid
+}
+
+class AutoGainControl[T <: Data: Ring: Order: ConvertableTo, V: ConvertableFrom](inGen:  T, outGen: T)  extends Module {
+  val io = IO(new Bundle {
+    val input = Input(Valid(inGen))
+    val output = Output(Valid(outGen))
+  })
+
+  val max = new Max[T, V](inGen, outGen, 1000);
+
+  max.io.input := io.input;
+  io.output := io.input.bits.asUInt / max.io.max.bits.asUInt;
+  io.output.valid := max.io.max.valid;
+}
+
+class FIRFilter[T <: Data: Ring: Order: ConvertableTo, V: ConvertableFrom](length:  Int, scale: Int, inGen: T, outGen: T) extends Module {
+  val io = IO(new Bundle {
+    val input = Input(Valid(inGen))
+    val output = Output(Valid(outGen))
+    val consts = Input(Valid(Vec(1, inGen)))
+    val index = Input(Valid(UInt(16.W)))
+  })
+
+  val factors = RegInit(VecInit(Seq.fill(length)(inGen)))
+
+  when (io.consts.valid && io.index.valid) {
+    factors := io.consts;
+  }
+
+  val taps = Seq(io.input.bits) ++ Seq.fill(factors.length - 1)(RegInit(0.S(8.W)))
+  taps.zip(taps.tail).foreach { case (a, b) => when (io.input.valid) { b := a } }
+  io.output := taps.zip(io.consts.bits).map { case (a, b) => (a.asUInt * b.asUInt >> (scale * scale)) }.reduce(_ + _)
+}
+
+
+class FFLBandEdge[T <: Data: Ring: Order: ConvertableTo, V: ConvertableFrom](bandwidth: Int, inGen:  T, outGen: T)  extends Module {
+  val io = IO(new Bundle {
+    val input = Input(Valid(inGen))
+    val output = Output(Valid(outGen))
+  })
+
+  val fir = new FIRFilter[T, V](bandwidth , 16, inGen, outGen);
+
+
+
+
+
+
+}
 
 /**
  * Example design in Chisel.
