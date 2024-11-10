@@ -63,7 +63,7 @@ class FFLBandEdge[T <: Data: Ring: Order: ConvertableTo, V: ConvertableFrom](ban
     val output = Output(Valid(outGen))
   })
 
-  val fir = new FIRFilter[T, V](bandwidth , 16, inGen, outGen);
+  val fir = new FIRFilter[T, V](bandwidth , 8, inGen, outGen);
 
 }
 

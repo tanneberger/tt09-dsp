@@ -1,6 +1,6 @@
 # Tiny Tapeout project information
 project:
-  title:        "tinydsp"      # Project title
+  title:        "tinydsp-lol"      # Project title
   author:       "Tassilo Tanneberger"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "testing digital dsp"      # One line description of what your project does
